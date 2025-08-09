@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  DOCTOR
+  PATIENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AppointmentType {
+  CONSULTATION
+  FOLLOW_UP
+  EMERGENCY
+  ROUTINE
+}
+
+enum RecordType {
+  CONSULTATION
+  LAB_TEST
+  PRESCRIPTION
+  FOLLOW_UP
+  EMERGENCY
+}
+
+enum RecordStatus {
+  COMPLETED
+  PENDING
+  IN_PROGRESS
+  CANCELLED
+}
+
+enum PriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Doctor {
+  id               String  @id @default(cuid())
+  name             String
+  specialization   String
+  phone            String?
+  email            String?
+  location         String?
+  experienceYears  Int?    @default(0)
+  consultationFee  Int?    @default(0)
+  status           String? // active/inactive
+  rating           Float?  @default(0)
+
+  appointments     Appointment[]
+  records          MedicalRecord[]
+  prescriptions    Prescription[]
+  schedules        ScheduleItem[]
+}
+
+model Patient {
+  id          String  @id @default(cuid())
+  name        String
+  age         Int?
+  gender      String? // male/female/other
+  phone       String?
+  email       String?
+  address     String?
+  bloodType   String?
+  status      String? // active/inactive
+
+  appointments  Appointment[]
+  records       MedicalRecord[]
+  prescriptions Prescription[]
+}
+
+model Appointment {
+  id         String             @id @default(cuid())
+  date       DateTime
+  duration   Int?               @default(30)
+  status     AppointmentStatus  @default(SCHEDULED)
+  type       AppointmentType    @default(CONSULTATION)
+  symptoms   String?
+  notes      String?
+
+  doctorId   String
+  patientId  String
+  doctor     Doctor             @relation(fields: [doctorId], references: [id])
+  patient    Patient            @relation(fields: [patientId], references: [id])
+
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model MedicalRecord {
+  id          String        @id @default(cuid())
+  date        DateTime
+  type        RecordType
+  status      RecordStatus  @default(COMPLETED)
+  symptoms    String?
+  diagnosis   String
+  prescription String?
+  notes       String?
+  vitalSigns  Json?
+
+  doctorId    String
+  patientId   String
+  doctor      Doctor        @relation(fields: [doctorId], references: [id])
+  patient     Patient       @relation(fields: [patientId], references: [id])
+}
+
+model Prescription {
+  id          String   @id @default(cuid())
+  date        DateTime
+  medicines   Json     // [{ name, dosage, frequency, duration }, ...]
+  notes       String?
+  status      String?  // active/fulfilled/cancelled
+
+  doctorId    String
+  patientId   String
+  doctor      Doctor   @relation(fields: [doctorId], references: [id])
+  patient     Patient  @relation(fields: [patientId], references: [id])
+}
+
+model ScheduleItem {
+  id          String        @id @default(cuid())
+  date        DateTime
+  duration    Int           @default(30)
+  type        AppointmentType @default(CONSULTATION)
+  status      AppointmentStatus @default(SCHEDULED)
+  room        String?
+  notes       String?
+  priority    PriorityLevel  @default(LOW)
+
+  doctorId    String
+  patientId   String
+  doctor      Doctor        @relation(fields: [doctorId], references: [id])
+  patient     Patient       @relation(fields: [patientId], references: [id])
+}
+
+model QueueItem {
+  id          String        @id @default(cuid())
+  priority    PriorityLevel @default(MEDIUM)
+  status      String        @default("waiting")
+  waitMinutes Int           @default(0)
+  symptoms    String?
+
+  doctorId    String
+  patientId   String
+  appointmentId String?
+  doctor      Doctor        @relation(fields: [doctorId], references: [id])
+  patient     Patient       @relation(fields: [patientId], references: [id])
+  appointment Appointment?  @relation(fields: [appointmentId], references: [id])
+}
+
+
