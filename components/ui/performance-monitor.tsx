@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Activity, Clock, Zap, TrendingUp, AlertCircle } from 'lucide-react';
-import { performanceMonitor } from '@/lib/performance';
+import { PerformanceMonitor as PerformanceMonitorClass } from '@/lib/performance';
 
 interface PerformanceMetrics {
   [key: string]: number;
@@ -23,11 +23,12 @@ export function PerformanceMonitor() {
   const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const [isMonitoring, setIsMonitoring] = useState(false);
+  const monitor = PerformanceMonitorClass.getInstance();
 
   useEffect(() => {
     if (isMonitoring) {
       const interval = setInterval(() => {
-        const currentMetrics = performanceMonitor.getMetrics();
+        const currentMetrics = monitor.getMetrics();
         setMetrics(currentMetrics);
         
         // Check for performance issues
@@ -36,9 +37,10 @@ export function PerformanceMonitor() {
 
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isMonitoring]);
 
-  const checkPerformanceIssues = (currentMetrics: PerformanceMetrics) => {
+  const checkPerformanceIssues = (currentMetrics: PerformanceMetrics): void => {
     const newAlerts: PerformanceAlert[] = [];
     
     Object.entries(currentMetrics).forEach(([key, value]) => {
@@ -68,7 +70,7 @@ export function PerformanceMonitor() {
 
   const startMonitoring = () => {
     setIsMonitoring(true);
-    performanceMonitor.clearMetrics();
+    monitor.clearMetrics();
     setAlerts([]);
   };
 
@@ -77,18 +79,18 @@ export function PerformanceMonitor() {
   };
 
   const clearMetrics = () => {
-    performanceMonitor.clearMetrics();
+    monitor.clearMetrics();
     setMetrics({});
     setAlerts([]);
   };
 
-  const getAveragePerformance = () => {
+  const getAveragePerformance = (): number => {
     const values = Object.values(metrics);
     if (values.length === 0) return 0;
     return values.reduce((sum, value) => sum + value, 0) / values.length;
   };
 
-  const getPerformanceScore = () => {
+  const getPerformanceScore = (): { score: string; color: string } => {
     const avg = getAveragePerformance();
     if (avg < 100) return { score: 'Excellent', color: 'bg-green-500' };
     if (avg < 500) return { score: 'Good', color: 'bg-blue-500' };

@@ -126,20 +126,20 @@ export async function POST(request: Request) {
     const newAppointment = {
       id: (mockAppointments.length + 1).toString(),
       date: new Date(`${body.date}T${body.time}`),
-      duration: body.duration || 30,
+      duration: Number(body.duration ?? 30),
       status: 'SCHEDULED',
-      type: body.type?.toUpperCase() || 'CONSULTATION',
-      symptoms: body.symptoms || null,
-      notes: body.notes || null,
-      doctorId: body.doctorId,
-      patientId: body.patientId,
-      doctor: { id: body.doctorId, name: body.doctorName || 'Unknown Doctor', specialization: 'General Medicine' },
-      patient: { id: body.patientId, name: body.patientName || 'Unknown Patient', age: null, gender: null },
+      type: String(body.type ?? 'CONSULTATION').toUpperCase(),
+      symptoms: String(body.symptoms ?? ''),
+      notes: String(body.notes ?? ''),
+      doctorId: String(body.doctorId),
+      patientId: String(body.patientId),
+      doctor: { id: String(body.doctorId), name: String(body.doctorName ?? 'Unknown Doctor'), specialization: 'General Medicine' },
+      patient: { id: String(body.patientId), name: String(body.patientName ?? 'Unknown Patient'), age: Number(body.patientAge ?? 0), gender: String(body.patientGender ?? 'unknown') },
       createdAt: new Date(),
       updatedAt: new Date()
     };
 
-    mockAppointments.push(newAppointment);
+    mockAppointments.push(newAppointment as any);
     
     return NextResponse.json(newAppointment, { status: 201 });
   } catch (error) {

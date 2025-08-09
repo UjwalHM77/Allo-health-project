@@ -204,29 +204,29 @@ export async function POST(request: Request) {
     // Create new patient
     const newPatient = {
       id: (mockPatients.length + 1).toString(),
-      name: body.name,
-      age: body.age,
-      gender: body.gender,
-      phone: body.phone || '+1 (555) 000-0000',
-      email: body.email || null,
-      address: body.address || 'Address not provided',
-      bloodType: body.bloodType || 'Unknown',
+      name: String(body.name),
+      age: Number(body.age),
+      gender: String(body.gender),
+      phone: String(body.phone ?? '+1 (555) 000-0000'),
+      email: String(body.email ?? ''),
+      address: String(body.address ?? 'Address not provided'),
+      bloodType: String(body.bloodType ?? 'Unknown'),
       status: 'active',
-      emergencyContact: body.emergencyContact || {
+      emergencyContact: (body.emergencyContact as any) || {
         name: 'Emergency Contact',
         relationship: 'Unknown',
         phone: '+1 (555) 000-0000'
       },
-      medicalHistory: body.medicalHistory || [],
-      allergies: body.allergies || [],
-      insurance: body.insurance || 'No insurance',
-      lastVisit: null,
-      nextAppointment: null,
+      medicalHistory: (body.medicalHistory as any) || [],
+      allergies: (body.allergies as any) || [],
+      insurance: String(body.insurance ?? ''),
+      lastVisit: new Date(),
+      nextAppointment: new Date(),
       createdAt: new Date(),
       updatedAt: new Date()
     };
 
-    mockPatients.push(newPatient);
+    mockPatients.push(newPatient as any);
     
     return NextResponse.json(newPatient, { status: 201 });
   } catch (error) {
